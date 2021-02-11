@@ -1,6 +1,8 @@
 <template>
   <div class="home">
 
+
+
     <div>
       Name: <input type="text" v-model="newName" /><br/>
       Address: <input type="text" v-model="newAddress" /><br/>
