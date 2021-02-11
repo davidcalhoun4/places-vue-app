@@ -1,11 +1,11 @@
 <template>
   <div class="home">
 
-     <div>
-      Name: <input type="text" v-model="newName"><br/>
-      Address: <input type="text" v-model="newAddress"><br/>
-      Image Url: <input type="text" v-model="newImage"><br/>
-      <button v-on:click="createPlace">Create Place</button>
+    <div>
+      Name: <input type="text" v-model="newName" /><br/>
+      Address: <input type="text" v-model="newAddress" /><br/>
+      Image Url: <input type="text" v-model="newImage" /><br/>
+      <button v-on:click="createPlace()">Create Place</button>
     </div>
 
     <h1>{{ message }}</h1>
@@ -14,7 +14,21 @@
       <h3> <u> {{ place.name }} </u> </h3>
       <img v-bind:src="place.image">
       <p> <strong> Adress: </strong> {{ place.address }} </p>
+      <button v-on:click="showPlace(place)"> More Info </button>
     </div>
+
+    <dialog>
+      <form method="dialog">
+        <h2>Place Info</h2>
+        <img :src="currentPlace.image" alt="" />
+        <p>Name: <input type="text" v-model="currentPlace.name" /> </p>
+        <p>Adress: <input type="text" v-model="currentPlace.price" /></p>
+        <p>Image Url: <input type="text" v-model="currentPlace.image_url" /> </p>
+        <button v-on:click="updatePlace({ currentPlace })">Update</button><br/>
+        <button v-on:click="destroyPlace(currentPlace)"> Delete </button><br/>
+        <button>Close</button>
+      </form>
+    </dialog>
 
   </div>
 </template>
@@ -48,6 +62,7 @@ export default {
       newAddress: "",
       newImage: "",
       currentPlace: {},
+      errors: [],
     };
   },
   created: function () {
@@ -66,9 +81,42 @@ export default {
         address: this.newAddress,
         image_url: this.newImage,
       };
-      axios.post("/api/places", params).then((response) => {
-        console.log(response.data);
-        this.places.push(response.data);
+      axios
+        .post("/api/places", params)
+        .then((response) => {
+          console.log(response.data);
+          this.places.push(response.data);
+        })
+        .catch((error) => {
+          console.log(error.response.data.errors);
+          this.errors = error.response.data.errors;
+        });
+    },
+    showPlace: function (place) {
+      console.log(place);
+      this.currentPlace = place;
+      document.querySelector("dialog").showModal();
+    },
+    updatePlace: function () {
+      var params = {
+        name: this.currentPlace.name,
+        address: this.currentPlace.address,
+        image_url: this.currentPlace.image_url,
+      };
+      axios
+        .patch(`/api/places/${this.currentPlace.id}`, params)
+        .then((response) => {
+          console.log("successful update", response.data);
+        })
+        .catch((error) => {
+          console.log("render and error", error.response.data);
+        });
+    },
+    destroyPlace: function (inputPlace) {
+      axios.delete(`/api/places/${inputPlace.id}`).then((response) => {
+        console.log("success", response.data);
+        var index = this.place.indexOf(inputPlace);
+        this.places.splice(index, 1);
       });
     },
   },
